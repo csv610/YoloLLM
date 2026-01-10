@@ -1,6 +1,6 @@
-# YoloLLM - YOLO Object Detection
+# YoloLLM - YOLO Object Detection & Segmentation
 
-A simple and modular Python tool for object detection using multiple YOLO model families. Detect objects in images or videos with support for 36 different pre-trained models.
+A comprehensive Python tool for object detection and instance segmentation using multiple YOLO model families. Detect and segment objects in images or videos with support for 36 different pre-trained models.
 
 ## Features
 
@@ -12,11 +12,14 @@ A simple and modular Python tool for object detection using multiple YOLO model 
   - YOLO12
   - RT-DETR
 
-- **Interactive Model Selection** - Choose from available models via command-line menu
+- **Object Detection** with interactive model selection via command-line menu
+
+- **Instance Segmentation** - Generate precise object masks and segmentation maps
 
 - **Multiple Output Formats**:
   - Table format (ASCII grid with detailed statistics)
   - JSON file export
+  - Segmentation masks (PNG format)
 
 - **Advanced Detection Metrics**:
   - Bounding box coordinates (multiple formats: xyxy, xywh, normalized variants)
@@ -24,7 +27,9 @@ A simple and modular Python tool for object detection using multiple YOLO model 
   - Object area as percentage of total image area
   - Results sorted by detection size (descending)
 
-- **Clean, Modular Code** - Well-organized class with helper methods and constants
+- **Mask Processing** - Utilities for post-processing segmentation masks
+
+- **Clean, Modular Code** - Well-organized classes with helper methods and constants
 
 ## Installation
 
@@ -167,12 +172,20 @@ Structured JSON file (`detections.json`):
 
 ```
 YoloLLM/
-├── yolo_detect.py          # Main detection module
+├── yolo_detect.py          # Main object detection module
+├── yolo_segment.py         # Instance segmentation module
+├── mask_processing.py      # Mask post-processing utilities
 ├── models/                 # Model storage (auto-created)
 │   ├── yolov8n.pt
 │   ├── yolo11x.pt
 │   └── ... (34 more models)
-├── detections.json         # Output file (generated)
+├── images/                 # Sample images for testing
+├── seg_results/            # Segmentation output (generated)
+├── detections.json         # Detection output (generated)
+├── tests/                  # Test suite
+│   ├── test_detection.py
+│   ├── test_all_models.py
+│   └── test_all_models_quiet.py
 ├── README.md               # This file
 └── .gitignore              # Git ignore file
 ```
@@ -208,6 +221,51 @@ YoloLLM/
 - `_check_results()` - Validate detection results exist
 - `_to_scalar(value)` - Convert tensor to scalar value
 - `_prepare_detections()` - Prepare and sort detection data
+
+## Segmentation Usage
+
+### Basic Segmentation
+
+```bash
+python yolo_segment.py
+```
+
+This will:
+1. Prompt you to select a model
+2. Ask for an image path
+3. Generate segmentation masks
+4. Save results to `seg_results/`
+
+### Python API
+
+```python
+from yolo_segment import YoloSegmenter
+
+# Initialize segmenter
+segmenter = YoloSegmenter(model_name="yolov8n-seg.pt")
+
+# Run segmentation
+segmenter.segment("image.jpg")
+
+# Get segmentation masks
+masks = segmenter.get_masks()
+
+# Save results
+segmenter.save_results("output_dir/")
+```
+
+## Mask Processing
+
+```python
+from mask_processing import process_masks
+
+# Process segmentation masks
+processed_masks = process_masks(
+    masks=masks,
+    min_area=100,
+    smooth=True
+)
+```
 
 ## Examples
 
