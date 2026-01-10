@@ -49,6 +49,7 @@ models/
 # Output files
 detections.json
 results/
+seg_results/
 *.jpg.json
 *.png.json
 
