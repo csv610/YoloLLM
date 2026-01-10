@@ -13,66 +13,66 @@ class YoloDetector:
 
     # YOLOv10 Models
     YOLOV10_MODELS = {
-        "YOLOv10n": "yolov10n.pt",
-        "YOLOv10s": "yolov10s.pt",
-        "YOLOv10m": "yolov10m.pt",
-        "YOLOv10b": "yolov10b.pt",
-        "YOLOv10l": "yolov10l.pt",
-        "YOLOv10x": "yolov10x.pt",
+        "v10-nano": "yolov10n.pt",
+        "v10-small": "yolov10s.pt",
+        "v10-medium": "yolov10m.pt",
+        "v10-base": "yolov10b.pt",
+        "v10-large": "yolov10l.pt",
+        "v10-xlarge": "yolov10x.pt",
     }
 
     # YOLOv9 Models
     YOLOV9_MODELS = {
-        "YOLOv9t": "yolov9t.pt",
-        "YOLOv9s": "yolov9s.pt",
-        "YOLOv9m": "yolov9m.pt",
-        "YOLOv9c": "yolov9c.pt",
-        "YOLOv9e": "yolov9e.pt",
+        "v9-tiny": "yolov9t.pt",
+        "v9-small": "yolov9s.pt",
+        "v9-medium": "yolov9m.pt",
+        "v9-compact": "yolov9c.pt",
+        "v9-extra": "yolov9e.pt",
     }
 
     # YOLOv8 Models
     YOLOV8_MODELS = {
-        "YOLOv8n": "yolov8n.pt",
-        "YOLOv8s": "yolov8s.pt",
-        "YOLOv8m": "yolov8m.pt",
-        "YOLOv8l": "yolov8l.pt",
-        "YOLOv8x": "yolov8x.pt",
+        "v8-nano": "yolov8n.pt",
+        "v8-small": "yolov8s.pt",
+        "v8-medium": "yolov8m.pt",
+        "v8-large": "yolov8l.pt",
+        "v8-xlarge": "yolov8x.pt",
     }
 
     # YOLOv8 World Models
     YOLOV8_WORLD_MODELS = {
-        "YOLOv8s-world": "yolov8s-world.pt",
-        "YOLOv8s-worldv2": "yolov8s-worldv2.pt",
-        "YOLOv8m-world": "yolov8m-world.pt",
-        "YOLOv8m-worldv2": "yolov8m-worldv2.pt",
-        "YOLOv8l-world": "yolov8l-world.pt",
-        "YOLOv8l-worldv2": "yolov8l-worldv2.pt",
-        "YOLOv8x-world": "yolov8x-world.pt",
-        "YOLOv8x-worldv2": "yolov8x-worldv2.pt",
+        "v8s-world": "yolov8s-world.pt",
+        "v8s-worldv2": "yolov8s-worldv2.pt",
+        "v8m-world": "yolov8m-world.pt",
+        "v8m-worldv2": "yolov8m-worldv2.pt",
+        "v8l-world": "yolov8l-world.pt",
+        "v8l-worldv2": "yolov8l-worldv2.pt",
+        "v8x-world": "yolov8x-world.pt",
+        "v8x-worldv2": "yolov8x-worldv2.pt",
     }
 
     # RT-DETR Models
     RTDETR_MODELS = {
-        "RT-DETR-l": "rtdetr-l.pt",
-        "RT-DETR-x": "rtdetr-x.pt",
+        "rtdetr-large": "rtdetr-l.pt",
+        "rtdetr-xlarge": "rtdetr-x.pt",
     }
 
     # YOLO11 Models
     YOLO11_MODELS = {
-        "YOLO11n": "yolo11n.pt",
-        "YOLO11s": "yolo11s.pt",
-        "YOLO11m": "yolo11m.pt",
-        "YOLO11l": "yolo11l.pt",
-        "YOLO11x": "yolo11x.pt",
+        "v11-nano": "yolo11n.pt",
+        "v11-small": "yolo11s.pt",
+        "v11-medium": "yolo11m.pt",
+        "v11-large": "yolo11l.pt",
+        "v11-xlarge": "yolo11x.pt",
     }
 
     # YOLO12 Models
     YOLO12_MODELS = {
-        "YOLO12n": "yolo12n.pt",
-        "YOLO12s": "yolo12s.pt",
-        "YOLO12m": "yolo12m.pt",
-        "YOLO12l": "yolo12l.pt",
-        "YOLO12x": "yolo12x.pt",
+        "v12-nano": "yolo12n.pt",
+        "v12-small": "yolo12s.pt",
+        "v12-medium": "yolo12m.pt",
+        "v12-large": "yolo12l.pt",
+        "v12-xlarge": "yolo12x.pt",
     }
 
     # Combined: All Available Models
@@ -100,20 +100,16 @@ class YoloDetector:
 
     def select_model(self):
         """Prompt user to select a model."""
-        models_list = list(self.AVAILABLE_MODELS.items())
         print("Available YOLO models:")
-        for i, (display_name, _) in enumerate(models_list, 1):
-            print(f"{i}. {display_name}")
+        for name in self.AVAILABLE_MODELS.keys():
+            print(f"  {name}")
 
         while True:
-            try:
-                choice = int(input(f"Select a model (1-{len(models_list)}): "))
-                if 1 <= choice <= len(models_list):
-                    return models_list[choice - 1][1]
-                else:
-                    print(f"Please enter a number between 1 and {len(models_list)}")
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+            choice = input("\nSelect a model: ").strip()
+            if choice in self.AVAILABLE_MODELS:
+                return self.AVAILABLE_MODELS[choice]
+            else:
+                print(f"Invalid model. Available models: {', '.join(self.AVAILABLE_MODELS.keys())}")
 
     def detect(self, source):
         """Run detection on an image or video source and return extracted detections."""
