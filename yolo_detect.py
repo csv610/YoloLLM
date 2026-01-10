@@ -11,23 +11,36 @@ class YoloDetector:
     FORMAT_TABLE = "table"
     FORMAT_JSON = "json"
 
-    AVAILABLE_MODELS = {
+    # YOLOv10 Models
+    YOLOV10_MODELS = {
         "YOLOv10n": "yolov10n.pt",
         "YOLOv10s": "yolov10s.pt",
         "YOLOv10m": "yolov10m.pt",
         "YOLOv10b": "yolov10b.pt",
         "YOLOv10l": "yolov10l.pt",
         "YOLOv10x": "yolov10x.pt",
+    }
+
+    # YOLOv9 Models
+    YOLOV9_MODELS = {
         "YOLOv9t": "yolov9t.pt",
         "YOLOv9s": "yolov9s.pt",
         "YOLOv9m": "yolov9m.pt",
         "YOLOv9c": "yolov9c.pt",
         "YOLOv9e": "yolov9e.pt",
+    }
+
+    # YOLOv8 Models
+    YOLOV8_MODELS = {
         "YOLOv8n": "yolov8n.pt",
         "YOLOv8s": "yolov8s.pt",
         "YOLOv8m": "yolov8m.pt",
         "YOLOv8l": "yolov8l.pt",
         "YOLOv8x": "yolov8x.pt",
+    }
+
+    # YOLOv8 World Models
+    YOLOV8_WORLD_MODELS = {
         "YOLOv8s-world": "yolov8s-world.pt",
         "YOLOv8s-worldv2": "yolov8s-worldv2.pt",
         "YOLOv8m-world": "yolov8m-world.pt",
@@ -36,18 +49,41 @@ class YoloDetector:
         "YOLOv8l-worldv2": "yolov8l-worldv2.pt",
         "YOLOv8x-world": "yolov8x-world.pt",
         "YOLOv8x-worldv2": "yolov8x-worldv2.pt",
+    }
+
+    # RT-DETR Models
+    RTDETR_MODELS = {
         "RT-DETR-l": "rtdetr-l.pt",
         "RT-DETR-x": "rtdetr-x.pt",
+    }
+
+    # YOLO11 Models
+    YOLO11_MODELS = {
         "YOLO11n": "yolo11n.pt",
         "YOLO11s": "yolo11s.pt",
         "YOLO11m": "yolo11m.pt",
         "YOLO11l": "yolo11l.pt",
         "YOLO11x": "yolo11x.pt",
+    }
+
+    # YOLO12 Models
+    YOLO12_MODELS = {
         "YOLO12n": "yolo12n.pt",
         "YOLO12s": "yolo12s.pt",
         "YOLO12m": "yolo12m.pt",
         "YOLO12l": "yolo12l.pt",
         "YOLO12x": "yolo12x.pt",
+    }
+
+    # Combined: All Available Models
+    AVAILABLE_MODELS = {
+        **YOLOV10_MODELS,
+        **YOLOV9_MODELS,
+        **YOLOV8_MODELS,
+        **YOLOV8_WORLD_MODELS,
+        **RTDETR_MODELS,
+        **YOLO11_MODELS,
+        **YOLO12_MODELS,
     }
 
     def __init__(self, model_name=None):
@@ -80,9 +116,9 @@ class YoloDetector:
                 print("Invalid input. Please enter a number.")
 
     def detect(self, source):
-        """Run detection on an image or video source."""
+        """Run detection on an image or video source and return extracted detections."""
         self.results = self.model(source)
-        return self.results
+        return self._extract_detections()
 
     def _check_results(self):
         """Check if detection results are available."""
@@ -93,18 +129,15 @@ class YoloDetector:
         """Convert tensor to scalar value."""
         return value.item() if hasattr(value, 'item') else value
 
-    def get_detections(self):
-        """Extract and return detection data from results."""
+    def _extract_detections(self):
+        """Extract detection data from results."""
         self._check_results()
 
         detections = []
         for result in self.results:
             for i in range(len(result.boxes)):
                 detection = {
-                    "xywh": result.boxes.xywh[i],
-                    "xywhn": result.boxes.xywhn[i],
                     "xyxy": result.boxes.xyxy[i],
-                    "xyxyn": result.boxes.xyxyn[i],
                     "class_name": result.names[int(result.boxes.cls[i].item())],
                     "confidence": result.boxes.conf[i].item(),
                 }
@@ -131,7 +164,7 @@ class YoloDetector:
 
     def _prepare_detections(self):
         """Prepare detection data with area percentage calculation."""
-        detections = self.get_detections()
+        detections = self._extract_detections()
         if not detections:
             return []
 

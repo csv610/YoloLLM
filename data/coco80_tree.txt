@@ -1,0 +1,121 @@
+OOT
+├── Living_Beings
+│   ├── Humans
+│   │   └── person
+│   └── Animals
+│       ├── bird
+│       ├── cat
+│       ├── dog
+│       ├── horse
+│       ├── sheep
+│       ├── cow
+│       ├── elephant
+│       ├── bear
+│       ├── zebra
+│       └── giraffe
+│
+├── Vehicles_and_Transportation
+│   ├── Land_Vehicles
+│   │   ├── bicycle
+│   │   ├── car
+│   │   ├── motorbike
+│   │   ├── bus
+│   │   ├── train
+│   │   └── truck
+│   ├── Air_Vehicles
+│   │   └── aeroplane
+│   └── Water_Vehicles
+│       └── boat
+│
+├── Outdoor_and_Street_Objects
+│   ├── Traffic_Control
+│   │   ├── traffic_light
+│   │   └── stop_sign
+│   └── Public_Infrastructure
+│       ├── fire_hydrant
+│       ├── parking_meter
+│       └── bench
+│
+├── Personal_Items
+│   ├── Bags_and_Carry_Items
+│   │   ├── backpack
+│   │   ├── handbag
+│   │   └── suitcase
+│   └── Wearables_and_Accessories
+│       ├── tie
+│       └── umbrella
+│
+├── Sports_and_Recreation
+│   ├── Sports_Equipment
+│   │   ├── frisbee
+│   │   ├── skis
+│   │   ├── snowboard
+│   │   ├── sports_ball
+│   │   ├── baseball_bat
+│   │   ├── baseball_glove
+│   │   └── tennis_racket
+│   └── Boards_and_Outdoor_Play
+│       ├── skateboard
+│       ├── surfboard
+│       └── kite
+│
+├── Food_and_Kitchen_Items
+│   ├── Food
+│   │   ├── banana
+│   │   ├── apple
+│   │   ├── sandwich
+│   │   ├── orange
+│   │   ├── broccoli
+│   │   ├── carrot
+│   │   ├── hot_dog
+│   │   ├── pizza
+│   │   ├── donut
+│   │   └── cake
+│   └── Tableware
+│       ├── bottle
+│       ├── wine_glass
+│       ├── cup
+│       ├── fork
+│       ├── knife
+│       ├── spoon
+│       └── bowl
+│
+├── Furniture_and_Home_Fixtures
+│   ├── Furniture
+│   │   ├── chair
+│   │   ├── sofa
+│   │   ├── bed
+│   │   └── diningtable
+│   ├── Bathroom_and_Utility_Fixtures
+│   │   ├── toilet
+│   │   └── sink
+│   └── Plants
+│       └── pottedplant
+│
+├── Electronics_and_Appliances
+│   ├── Consumer_Electronics
+│   │   ├── tvmonitor
+│   │   ├── laptop
+│   │   ├── mouse
+│   │   ├── remote
+│   │   ├── keyboard
+│   │   └── cell_phone
+│   └── Kitchen_Appliances
+│       ├── microwave
+│       ├── oven
+│       ├── toaster
+│       └── refrigerator
+│
+└── Household_and_Miscellaneous
+    ├── Books_and_Decor
+    │   ├── book
+    │   ├── clock
+    │   └── vase
+    ├── Tools
+    │   └── scissors
+    ├── Toys
+    │   └── teddy_bear
+    └── Personal_Care_Items
+        ├── hair_drier
+        └── toothbrush
+
