@@ -48,11 +48,7 @@ models/
 *.pt
 
 # Output files
-detections.json
 results/
-seg_results/
-*.jpg.json
-*.png.json
 
 # Test/temporary files
 .pytest_cache/
