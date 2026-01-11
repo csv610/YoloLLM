@@ -1,6 +1,7 @@
 
 import os
 import json
+import argparse
 from pathlib import Path
 from ultralytics import YOLO
 from tabulate import tabulate
@@ -93,6 +94,10 @@ class YoloDetector:
 
         if model_name is None:
             model_name = self.select_model()
+        else:
+            # Look up the actual filename from the model name key
+            if model_name in self.AVAILABLE_MODELS:
+                model_name = self.AVAILABLE_MODELS[model_name]
 
         model_path = self.models_dir / model_name
         self.model = YOLO(str(model_path))
@@ -246,7 +251,34 @@ class YoloDetector:
 
 
 if __name__ == "__main__":
-    detector = YoloDetector()
-    input_source = input("\nEnter image path or URL: ")
-    detector.detect(input_source)
-    detector.output_results()
+    parser = argparse.ArgumentParser(description="YOLO Object Detection")
+    parser.add_argument(
+        "-i", "--input",
+        required=True,
+        help="Path to image or video file, or URL"
+    )
+    parser.add_argument(
+        "-m", "--model",
+        default=None,
+        help="Model name (e.g., v12-nano, v11-large). If not provided, will prompt for selection."
+    )
+    parser.add_argument(
+        "-f", "--format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format: table or json (default: table)"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        default="detections.json",
+        help="Output file path for JSON results (default: detections.json)"
+    )
+
+    args = parser.parse_args()
+
+    detector = YoloDetector(model_name=args.model)
+    detector.detect(args.input)
+    detector.output_results(format_type=args.format)
+
+    if args.format == "json":
+        detector.save_to_json(output_file=args.output)

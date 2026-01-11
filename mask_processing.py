@@ -47,7 +47,7 @@ def overlay_masks(segments, image_path, output_path="overlay.png", alpha=0.6):
         segments: List of Segment objects
         image_path: Path or URL to the original image
         output_path: Path to save the overlay image (default: overlay.png)
-        alpha: Transparency of masks (0-1, default: 0.6)
+        alpha: Mask transparency from 0.0 (no transparency, opaque masks) to 1.0 (full transparency, invisible masks) (default: 0.6)
     """
     if not segments:
         print("No segments to overlay")
@@ -84,7 +84,7 @@ def overlay_masks(segments, image_path, output_path="overlay.png", alpha=0.6):
         mask_bool = mask > 0.5
         for c in range(3):
             overlay_array[mask_bool, c] = (
-                overlay_array[mask_bool, c] * (1 - alpha) + color[c] * alpha
+                overlay_array[mask_bool, c] * alpha + color[c] * (1 - alpha)
             )
 
     # Convert back to uint8 and save
