@@ -67,6 +67,15 @@ class YoloDetector:
         "v11-xlarge": "yolo11x.pt",
     }
 
+    # YOLO11 OBB Models (Oriented Bounding Box)
+    YOLO11_OBB_MODELS = {
+        "v11n-obb": "yolo11n-obb.pt",
+        "v11s-obb": "yolo11s-obb.pt",
+        "v11m-obb": "yolo11m-obb.pt",
+        "v11l-obb": "yolo11l-obb.pt",
+        "v11x-obb": "yolo11x-obb.pt",
+    }
+
     # YOLO12 Models
     YOLO12_MODELS = {
         "v12-nano": "yolo12n.pt",
@@ -84,6 +93,7 @@ class YoloDetector:
         **YOLOV8_WORLD_MODELS,
         **RTDETR_MODELS,
         **YOLO11_MODELS,
+        **YOLO11_OBB_MODELS,
         **YOLO12_MODELS,
     }
 
@@ -136,13 +146,28 @@ class YoloDetector:
 
         detections = []
         for result in self.results:
-            for i in range(len(result.boxes)):
-                detection = {
-                    "xyxy": result.boxes.xyxy[i],
-                    "class_name": result.names[int(result.boxes.cls[i].item())],
-                    "confidence": result.boxes.conf[i].item(),
-                }
-                detections.append(detection)
+            # Check if this is an OBB result
+            if hasattr(result, 'obb') and result.obb is not None and len(result.obb) > 0:
+                # OBB (Oriented Bounding Box) detection
+                for i in range(len(result.obb)):
+                    detection = {
+                        "type": "obb",
+                        "xywhr": result.obb.xywhr[i],  # center-x, center-y, width, height, angle
+                        "xyxyxyxy": result.obb.xyxyxyxy[i],  # 4 polygon points
+                        "class_name": result.names[int(result.obb.cls[i].item())],
+                        "confidence": result.obb.conf[i].item(),
+                    }
+                    detections.append(detection)
+            else:
+                # Regular box detection
+                for i in range(len(result.boxes)):
+                    detection = {
+                        "type": "box",
+                        "xyxy": result.boxes.xyxy[i],
+                        "class_name": result.names[int(result.boxes.cls[i].item())],
+                        "confidence": result.boxes.conf[i].item(),
+                    }
+                    detections.append(detection)
         return detections
 
     def select_output_format(self):
@@ -176,8 +201,15 @@ class YoloDetector:
 
         # Calculate area percentage for each detection
         for det in detections:
-            x1, y1, x2, y2 = det['xyxy']
-            box_area = (x2 - x1) * (y2 - y1)
+            if det['type'] == 'obb':
+                # For OBB, use width and height from xywhr (center-x, center-y, width, height, angle)
+                _, _, width, height, _ = det['xywhr']
+                box_area = self._to_scalar(width) * self._to_scalar(height)
+            else:
+                # For regular boxes, use xyxy coordinates
+                x1, y1, x2, y2 = det['xyxy']
+                box_area = (self._to_scalar(x2) - self._to_scalar(x1)) * (self._to_scalar(y2) - self._to_scalar(y1))
+
             det['area_percent'] = (box_area / total_area) * 100
 
         # Sort by area percentage (descending)
@@ -194,8 +226,15 @@ class YoloDetector:
 
         table_data = []
         for i, det in enumerate(sorted_detections, 1):
-            x1, y1, x2, y2 = det['xyxy']
-            box = f"{{{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}}}"
+            if det['type'] == 'obb':
+                # For OBB, show the 4 polygon points
+                points = det['xyxyxyxy']
+                box = "Polygon: " + ", ".join([f"({int(p[0])}, {int(p[1])})" for p in points])
+            else:
+                # For regular boxes, show xyxy
+                x1, y1, x2, y2 = det['xyxy']
+                box = f"{{{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}}}"
+
             table_data.append([
                 i,
                 det['class_name'],
@@ -204,7 +243,8 @@ class YoloDetector:
                 f"{det['area_percent']:.2f}%",
             ])
 
-        headers = ["ID", "Class", "Box (xmin, ymin, xmax, ymax)", "Confidence", "Area %"]
+        box_type = "Box (xmin, ymin, xmax, ymax) / Polygon Points"
+        headers = ["ID", "Class", box_type, "Confidence", "Area %"]
         print(f"\nDetected {len(sorted_detections)} object(s):\n")
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
@@ -219,19 +259,32 @@ class YoloDetector:
 
         json_data = []
         for i, det in enumerate(sorted_detections, 1):
-            x1, y1, x2, y2 = det['xyxy']
-            json_data.append({
+            detection_obj = {
                 "id": i,
                 "class": det['class_name'],
-                "box": {
+                "confidence": float(det['confidence']),
+                "area_percent": round(float(det['area_percent']), 2)
+            }
+
+            if det['type'] == 'obb':
+                # For OBB detections, include polygon points
+                detection_obj["type"] = "obb"
+                detection_obj["polygon_points"] = [
+                    {"x": int(self._to_scalar(p[0])), "y": int(self._to_scalar(p[1]))}
+                    for p in det['xyxyxyxy']
+                ]
+            else:
+                # For regular box detections
+                x1, y1, x2, y2 = det['xyxy']
+                detection_obj["type"] = "box"
+                detection_obj["box"] = {
                     "xmin": int(self._to_scalar(x1)),
                     "ymin": int(self._to_scalar(y1)),
                     "xmax": int(self._to_scalar(x2)),
                     "ymax": int(self._to_scalar(y2))
-                },
-                "confidence": float(det['confidence']),
-                "area_percent": round(float(det['area_percent']), 2)
-            })
+                }
+
+            json_data.append(detection_obj)
 
         output_path = Path(__file__).parent / output_file
         with open(output_path, 'w') as f:
