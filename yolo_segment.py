@@ -159,8 +159,8 @@ def main():
     parser.add_argument(
         "-o", "--output-dir",
         metavar="OUTPUT_DIR",
-        default="seg_results",
-        help="Output directory for masks and overlay images (default: seg_results)"
+        default="results/seg",
+        help="Output directory for masks and overlay images (default: results/seg)"
     )
     parser.add_argument(
         "-a", "--alpha",

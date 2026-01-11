@@ -176,8 +176,8 @@ Examples:
     parser.add_argument(
         "-o", "--output",
         type=str,
-        default="sam_segment.png",
-        help="Path to save output image (default: sam_segment.png)"
+        default="results/seg/sam_segment.png",
+        help="Path to save output image (default: results/seg/sam_segment.png)"
     )
 
     parser.add_argument(
@@ -196,8 +196,8 @@ Examples:
     parser.add_argument(
         "-d", "--masks-dir",
         type=str,
-        default="masks",
-        help="Directory to save individual masks (default: masks)"
+        default="results/seg/masks",
+        help="Directory to save individual masks (default: results/seg/masks)"
     )
 
     args = parser.parse_args()
@@ -215,6 +215,10 @@ Examples:
     print(f"Segmenting image: {args.image}")
     segments = yolo_sam.segment(args.image)
     print(f"Found {len(segments)} segments")
+
+    # Create output directory
+    output_dir = Path(args.output).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Save individual masks if requested
     if args.save_masks:
