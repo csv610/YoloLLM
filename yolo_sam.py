@@ -22,8 +22,13 @@ SAM2_1_MODELS = {
     "sam2.1-large": "sam2.1_l.pt",
 }
 
+# Mobile SAM model
+MOBILE_SAM_MODELS = {
+    "mobile-sam": "mobile_sam.pt",
+}
+
 # All available models
-AVAILABLE_MODELS = {**SAM2_MODELS, **SAM2_1_MODELS}
+AVAILABLE_MODELS = {**SAM2_MODELS, **SAM2_1_MODELS, **MOBILE_SAM_MODELS}
 
 
 class Segment:
@@ -60,7 +65,21 @@ class YoloSAM:
         self.original_image = None
         self.results = None
 
-    def load_image(self, image_path: str) -> np.ndarray:
+    def segment(self, image_path: str) -> list:
+        """
+        Run complete segmentation pipeline on an image.
+
+        Args:
+            image_path: Path to the image file
+
+        Returns:
+            List of Segment objects containing mask data
+        """
+        self._load_image(image_path)
+        self._infer()
+        return self._get_masks()
+
+    def _load_image(self, image_path: str) -> np.ndarray:
         """
         Load an image from file.
 
@@ -74,7 +93,7 @@ class YoloSAM:
         self.original_image = self.image.copy()
         return self.image
 
-    def infer(self, image_path: str = None) -> list:
+    def _infer(self, image_path: str = None) -> list:
         """
         Run SAM inference on an image.
 
@@ -85,15 +104,15 @@ class YoloSAM:
             List of inference results
         """
         if image_path is not None:
-            self.load_image(image_path)
+            self._load_image(image_path)
 
         if self.image is None:
-            raise ValueError("No image loaded. Call load_image() first or provide image_path.")
+            raise ValueError("No image loaded. Call segment() with an image_path.")
 
         self.results = self.model(self.image)
         return self.results
 
-    def get_masks(self) -> list:
+    def _get_masks(self) -> list:
         """
         Get list of segmentation masks as Segment objects, sorted by mask area (white pixel count).
 
@@ -122,20 +141,6 @@ class YoloSAM:
 
         return segments
 
-    def segment(self, image_path: str) -> list:
-        """
-        Run complete segmentation pipeline on an image.
-
-        Args:
-            image_path: Path to the image file
-
-        Returns:
-            List of Segment objects containing mask data
-        """
-        self.load_image(image_path)
-        self.infer()
-        return self.get_masks()
-
 
 def main():
     """Main function to run YoloSAM from command line."""
@@ -149,7 +154,7 @@ Available models:
 Examples:
   python yolo_sam.py -i image.jpg
   python yolo_sam.py -i image.jpg -m sam2.1-large
-  python yolo_sam.py -i image.jpg -m sam2.1-base -o result.jpg -a 0.7
+  python yolo_sam.py -i image.jpg -m sam2.1-base -o result.jpg -t 0.7
   python yolo_sam.py -i image.jpg -s -d my_masks
         """
     )
@@ -176,10 +181,10 @@ Examples:
     )
 
     parser.add_argument(
-        "-a", "--alpha",
+        "-t", "--transparency",
         type=float,
-        default=0.6,
-        help="Mask transparency from 0.0 (no transparency, opaque masks) to 1.0 (full transparency, invisible masks) (default: 0.6)"
+        default=0.25,
+        help="Mask transparency from 0.0 (no transparency, opaque masks) to 1.0 (full transparency, invisible masks) (default: 0.25)"
     )
 
     parser.add_argument(
@@ -217,8 +222,8 @@ Examples:
         save_masks(segments, output_dir=args.masks_dir)
 
     # Create overlay using mask_processing
-    print(f"Overlaying masks with alpha {args.alpha}...")
-    overlay_masks(segments, args.image, output_path=args.output, alpha=args.alpha)
+    print(f"Overlaying masks with transparency {args.transparency}...")
+    overlay_masks(segments, args.image, output_path=args.output, alpha=args.transparency)
 
     print("Done!")
 
