@@ -82,6 +82,24 @@ class YoloDetector:
         "v12-xlarge": "yolo12x.pt",
     }
 
+    # YOLO26 Models
+    YOLO26_MODELS = {
+        "v26-nano": "yolo26n.pt",
+        "v26-small": "yolo26s.pt",
+        "v26-medium": "yolo26m.pt",
+        "v26-large": "yolo26l.pt",
+        "v26-xlarge": "yolo26x.pt",
+    }
+
+    # YOLO26 OBB Models (Oriented Bounding Box)
+    YOLO26_OBB_MODELS = {
+        "v26n-obb": "yolo26n-obb.pt",
+        "v26s-obb": "yolo26s-obb.pt",
+        "v26m-obb": "yolo26m-obb.pt",
+        "v26l-obb": "yolo26l-obb.pt",
+        "v26x-obb": "yolo26x-obb.pt",
+    }
+
     # Combined: All Available Models
     AVAILABLE_MODELS = {
         **YOLOV10_MODELS,
@@ -92,6 +110,8 @@ class YoloDetector:
         **YOLO11_MODELS,
         **YOLO11_OBB_MODELS,
         **YOLO12_MODELS,
+        **YOLO26_MODELS,
+        **YOLO26_OBB_MODELS,
     }
 
     def __init__(self, model_name=None):

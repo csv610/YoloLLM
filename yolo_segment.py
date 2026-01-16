@@ -23,8 +23,26 @@ YOLOV11_MODELS = {
     "v11-xlarge": "yolo11x-seg.pt",
 }
 
+# YOLOv26 segmentation models
+YOLOV26_MODELS = {
+    "v26-nano": "yolo26n-seg.pt",
+    "v26-small": "yolo26s-seg.pt",
+    "v26-medium": "yolo26m-seg.pt",
+    "v26-large": "yolo26l-seg.pt",
+    "v26-xlarge": "yolo26x-seg.pt",
+}
+
+# YOLOE-26 segmentation models
+YOLOE26_MODELS = {
+    "ve26-nano": "yoloe26n-seg.pt",
+    "ve26-small": "yoloe26s-seg.pt",
+    "ve26-medium": "yoloe26m-seg.pt",
+    "ve26-large": "yoloe26l-seg.pt",
+    "ve26-xlarge": "yoloe26x-seg.pt",
+}
+
 # Combined models
-MODELS = {**YOLOV8_MODELS, **YOLOV11_MODELS}
+MODELS = {**YOLOV8_MODELS, **YOLOV11_MODELS, **YOLOV26_MODELS, **YOLOE26_MODELS}
 
 
 class Segment:

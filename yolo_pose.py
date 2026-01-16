@@ -27,8 +27,17 @@ class YoloPose:
         "yolov8x-p6": "yolov8x-pose-p6.pt",
     }
 
+    # YOLO26 Pose Models
+    YOLO26_MODELS = {
+        "yolo26n": "yolo26n-pose.pt",
+        "yolo26s": "yolo26s-pose.pt",
+        "yolo26m": "yolo26m-pose.pt",
+        "yolo26l": "yolo26l-pose.pt",
+        "yolo26x": "yolo26x-pose.pt",
+    }
+
     # Combined all available models
-    ALL_MODELS = {**YOLO11_MODELS, **YOLOV8_MODELS}
+    ALL_MODELS = {**YOLO11_MODELS, **YOLOV8_MODELS, **YOLO26_MODELS}
 
     def __init__(self, model: str = "yolo11n", device: Optional[Union[int, str]] = None):
         """
@@ -179,6 +188,9 @@ def main():
             print(f"  - {model_name}")
         print("\nAvailable YOLOv8 Models:")
         for model_name in YoloPose.YOLOV8_MODELS.keys():
+            print(f"  - {model_name}")
+        print("\nAvailable YOLO26 Models:")
+        for model_name in YoloPose.YOLO26_MODELS.keys():
             print(f"  - {model_name}")
         return
 
