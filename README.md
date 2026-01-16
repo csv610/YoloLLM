@@ -42,13 +42,14 @@ python yoloe_segment.py image.jpg -m 11l -p person car
 
 ## Features
 
-- **70+ Pre-trained Models** across multiple families:
-  - YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12, RT-DETR (36 detection models)
-  - YOLO Pose models (11 models)
+- **80+ Pre-trained Models** across multiple families:
+  - YOLOv8, YOLOv9, YOLOv10, YOLO11, YOLO12, YOLO26, RT-DETR (46 detection models including OBB variants)
+  - YOLO Pose models (16 models)
   - SAM 2 & SAM 2.1 models (8 models)
   - Mobile SAM (1 model)
   - FastSAM (2 models)
   - YOLOE Segmentation (12 models with text prompt support)
+  - YOLO26 & YOLOE-26 Segmentation (10 models)
 
 - **Object Detection** with interactive model selection via command-line menu
 
@@ -157,7 +158,7 @@ detector.print_detections()
 
 ## Available Models
 
-### Object Detection Models (36 total)
+### Object Detection Models (46 total)
 
 **YOLOv8 (13 models)**
 - Standard: YOLOv8n, YOLOv8s, YOLOv8m, YOLOv8l, YOLOv8x
@@ -175,10 +176,14 @@ detector.print_detections()
 **YOLO12 (5 models)**
 - YOLO12n, YOLO12s, YOLO12m, YOLO12l, YOLO12x
 
+**YOLO26 (10 models)**
+- Standard: YOLO26n, YOLO26s, YOLO26m, YOLO26l, YOLO26x
+- OBB (Oriented Bounding Box): YOLO26n-obb, YOLO26s-obb, YOLO26m-obb, YOLO26l-obb, YOLO26x-obb
+
 **RT-DETR (2 models)**
 - RT-DETR-l, RT-DETR-x
 
-### Pose Estimation Models (11 total)
+### Pose Estimation Models (16 total)
 
 **YOLO11 Pose (5 models)**
 - yolo11n-pose, yolo11s-pose, yolo11m-pose, yolo11l-pose, yolo11x-pose
@@ -186,7 +191,10 @@ detector.print_detections()
 **YOLOv8 Pose (6 models)**
 - yolov8n-pose, yolov8s-pose, yolov8m-pose, yolov8l-pose, yolov8x-pose, yolov8x-pose-p6
 
-### Segmentation Models (23 total)
+**YOLO26 Pose (5 models)**
+- yolo26n-pose, yolo26s-pose, yolo26m-pose, yolo26l-pose, yolo26x-pose
+
+### Segmentation Models (33 total)
 
 **SAM 2 (4 models)**
 - sam2-tiny, sam2-small, sam2-base, sam2-large
@@ -205,6 +213,12 @@ detector.print_detections()
 
 **YOLOE Prompt-Free (6 models)**
 - 11s-pf, 11m-pf, 11l-pf, v8s-pf, v8m-pf, v8l-pf
+
+**YOLO26 Segmentation (5 models)**
+- v26-nano, v26-small, v26-medium, v26-large, v26-xlarge
+
+**YOLOE-26 Segmentation (5 models)**
+- ve26-nano, ve26-small, ve26-medium, ve26-large, ve26-xlarge
 
 ### Model Naming Convention
 - **n** = Nano (smallest, fastest)
