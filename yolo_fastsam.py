@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from pathlib import Path
 from ultralytics import FastSAM
-from mask_processing import save_masks, overlay_masks
+from mask_processing import save_masks, overlay_masks, Segment
 
 
 # SAM 2 models
@@ -14,13 +14,6 @@ FASTSAM_MODELS = {
 
 # All available models
 AVAILABLE_MODELS = {**FASTSAM_MODELS}
-
-
-class Segment:
-    """Simple class to hold segmentation mask data."""
-    def __init__(self, mask, label="segment"):
-        self.mask = mask
-        self.label = label
 
 
 class YoloFastSAM:

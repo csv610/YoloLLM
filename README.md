@@ -22,7 +22,7 @@ A comprehensive Python toolkit for object detection, instance segmentation, and 
 
 ```bash
 # Install dependencies
-pip install ultralytics tabulate opencv-python numpy
+pip install ultralytics tabulate opencv-python numpy supervision
 
 # Object Detection
 python yolo_detect.py
@@ -94,7 +94,7 @@ cd YoloLLM
 # Install dependencies
 pip install -r requirements.txt
 # Or manually install:
-pip install ultralytics tabulate opencv-python numpy
+pip install ultralytics tabulate opencv-python numpy supervision
 
 # Create models directory (auto-created on first run)
 mkdir models
@@ -675,11 +675,12 @@ yoloe_pf.save("street_all_objects.jpg")
 ```
 ultralytics>=8.0.0
 tabulate>=0.9.0
-opencv-python>=4.5.0
-Pillow>=8.0.0
+supervision>=0.24.0
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=10.0.0
+opencv-python>=4.8.0
 numpy>=1.20.0
-torch>=1.9.0
-torchvision>=0.10.0
 ```
 
 Note: Install all dependencies using `pip install -r requirements.txt`

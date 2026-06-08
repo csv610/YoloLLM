@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from pathlib import Path
 from ultralytics import SAM
-from mask_processing import save_masks, overlay_masks
+from mask_processing import save_masks, overlay_masks, Segment
 
 
 # SAM 2 models
@@ -29,13 +29,6 @@ MOBILE_SAM_MODELS = {
 
 # All available models
 AVAILABLE_MODELS = {**SAM2_MODELS, **SAM2_1_MODELS, **MOBILE_SAM_MODELS}
-
-
-class Segment:
-    """Simple class to hold segmentation mask data."""
-    def __init__(self, mask, label="segment"):
-        self.mask = mask
-        self.label = label
 
 
 class YoloSAM:

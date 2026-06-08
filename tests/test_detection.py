@@ -9,4 +9,5 @@ for i, det in enumerate(detections, 1):
     print(f"{i}. {det['class_name']} - Confidence: {det['confidence']:.2%}")
 
 # Test output formats
-detector.output_results("table")
+detector.print_detections()
+detector.save_to_json("test_output.json")

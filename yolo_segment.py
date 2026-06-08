@@ -1,9 +1,9 @@
 import argparse
 import os
 import shutil
-import numpy as np
+from pathlib import Path
 from ultralytics import YOLO
-from mask_processing import save_masks, overlay_masks
+from mask_processing import save_masks, overlay_masks, Segment
 
 # YOLOv8 segmentation models
 YOLOV8_MODELS = {
@@ -45,21 +45,6 @@ YOLOE26_MODELS = {
 MODELS = {**YOLOV8_MODELS, **YOLOV11_MODELS, **YOLOV26_MODELS, **YOLOE26_MODELS}
 
 
-class Segment:
-    """Represents a single segmented object with its label and binary mask."""
-
-    def __init__(self, label, mask):
-        """
-        Initialize a Segment.
-
-        Args:
-            label: Class name of the detected object
-            mask: Binary segmentation mask image (numpy array with 0s and 1s)
-        """
-        self.label = label
-        self.mask = mask
-
-
 class YoloSegmentation:
     """YOLO Segmentation class for running image segmentation."""
 
@@ -71,7 +56,7 @@ class YoloSegmentation:
             model_name: Key from MODELS dictionary (default: v11-nano)
 
         Raises:
-            ValueError: If model_name is not in MODELS or model file not found in models directory
+            ValueError: If model_name is not in MODELS
         """
         if model_name not in MODELS:
             raise ValueError(
@@ -80,13 +65,9 @@ class YoloSegmentation:
 
         self.model_name = model_name
         model_filename = MODELS[model_name]
-        self.model_file = os.path.join("models", model_filename)
-
-        if not os.path.exists(self.model_file):
-            raise ValueError(
-                f"Model file not found at {self.model_file}. "
-                f"Please download {model_filename} and place it in the models/ directory."
-            )
+        self.models_dir = Path(__file__).parent / "models"
+        self.models_dir.mkdir(exist_ok=True)
+        self.model_file = str(self.models_dir / model_filename)
 
         print(f"Loading {model_name} model ({self.model_file})...")
         self.model = YOLO(self.model_file)
@@ -129,7 +110,7 @@ class YoloSegmentation:
                 # Create Segment object for each detected object
                 for mask, cls_idx in zip(masks, class_indices):
                     label = result.names[int(cls_idx)]
-                    segments.append(Segment(label, mask))
+                    segments.append(Segment(mask=mask, label=label))
 
         return segments
 

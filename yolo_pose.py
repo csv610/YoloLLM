@@ -117,6 +117,8 @@ class YoloPose:
         detections = []
 
         for result in results:
+            if result.boxes is None:
+                continue
             for idx in range(len(result.boxes)):
                 detection = {
                     "bbox": result.boxes.xyxy[idx].cpu().numpy() if hasattr(result.boxes.xyxy[idx], 'cpu') else result.boxes.xyxy[idx],

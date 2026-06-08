@@ -4,6 +4,12 @@ import numpy as np
 import colorsys
 
 
+class Segment:
+    def __init__(self, mask, label="object"):
+        self.mask = mask
+        self.label = label
+
+
 def save_masks(segments, output_dir="."):
     """
     Save segmentation masks as PNG images.

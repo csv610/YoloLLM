@@ -3,9 +3,11 @@ import os
 import json
 import argparse
 from pathlib import Path
+import numpy as np
 from ultralytics import YOLO
 import supervision as sv
 import cv2
+from tabulate import tabulate
 
 
 class YoloDetector:
@@ -114,6 +116,9 @@ class YoloDetector:
         **YOLO26_OBB_MODELS,
     }
 
+    FORMAT_TABLE = "table"
+    FORMAT_JSON = "json"
+
     def __init__(self, model_name=None):
         """Initialize YoloDetector with a model."""
         self.models_dir = Path(__file__).parent / "models"
@@ -148,6 +153,60 @@ class YoloDetector:
         self.source = source
         self.results = self.model(source)
         return self._extract_detections()
+
+    def get_detections(self):
+        """Return prepared detection data."""
+        return self._prepare_detections()
+
+    def print_detections(self):
+        """Display results as formatted table."""
+        detections = self._prepare_detections()
+        if not detections:
+            print("No objects detected.")
+            return
+
+        table_data = []
+        for i, det in enumerate(detections, 1):
+            if det['type'] == 'obb':
+                box_str = f"polygon({len(det['xyxyxyxy'])} pts)"
+            else:
+                x1, y1, x2, y2 = det['xyxy']
+                box_str = f"({int(self._to_scalar(x1))}, {int(self._to_scalar(y1))}, {int(self._to_scalar(x2))}, {int(self._to_scalar(y2))})"
+            table_data.append([
+                i,
+                det['class_name'],
+                box_str,
+                f"{det['confidence']:.2%}",
+                f"{det['area_percent']:.2f}%"
+            ])
+
+        headers = ["ID", "Class", "Box (xmin, ymin, xmax, ymax)", "Confidence", "Area %"]
+        print("\n" + tabulate(table_data, headers=headers, tablefmt="grid"))
+
+    def select_output_format(self):
+        """Interactive format selection menu."""
+        print("\nOutput format:")
+        print(f"  1. {self.FORMAT_TABLE}")
+        print(f"  2. {self.FORMAT_JSON}")
+        while True:
+            choice = input("\nSelect format: ").strip()
+            if choice == "1":
+                return self.FORMAT_TABLE
+            elif choice == "2":
+                return self.FORMAT_JSON
+            else:
+                print("Invalid choice. Enter 1 or 2.")
+
+    def output_results(self, format_type=None):
+        """Output in selected format."""
+        if format_type is None:
+            format_type = self.select_output_format()
+        if format_type == self.FORMAT_TABLE:
+            self.print_detections()
+        elif format_type == self.FORMAT_JSON:
+            self.save_to_json()
+        else:
+            print(f"Unknown format: {format_type}")
 
     def _check_results(self):
         """Check if detection results are available."""
@@ -330,7 +389,6 @@ class YoloDetector:
             confidence = [d['confidence'] for d in detections_list]
             class_ids = [d['class_id'] for d in detections_list]
 
-            import numpy as np
             detections = sv.Detections(
                 xyxy=np.array(xyxy),
                 confidence=np.array(confidence),
