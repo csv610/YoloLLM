@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, Optional
 
 import cv2
 import numpy as np
@@ -18,8 +18,8 @@ class BaseYoloModel(ABC):
     Subclasses must set :attr:`model_class` and :attr:`available_models`.
     """
 
-    model_class: ClassVar[type]
-    available_models: ClassVar[dict[str, str]] = {}
+    model_class: type
+    available_models: dict[str, str] = {}
 
     def __init__(
         self,

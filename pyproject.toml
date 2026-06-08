@@ -21,6 +21,9 @@ dependencies = [
     "numpy>=1.20.0",
 ]
 
+[project.scripts]
+yolollm = "cli:main"
+
 [tool.ruff]
 target-version = "py39"
 line-length = 120
@@ -35,6 +38,14 @@ quote-style = "double"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict = false
+warn_unused_configs = true
+explicit_package_bases = true
+exclude = ["yoloenv/", ".git/"]
 
 [tool.coverage.run]
 source = ["."]

@@ -38,10 +38,20 @@ class YoloPose(BaseYoloModel):
         "yolo26x": "yolo26x-pose.pt",
     }
 
+    _ALIASES: Dict[str, str] = {
+        "v11-nano": "yolo11n-pose.pt", "v11-small": "yolo11s-pose.pt",
+        "v11-medium": "yolo11m-pose.pt", "v11-large": "yolo11l-pose.pt", "v11-xlarge": "yolo11x-pose.pt",
+        "v8-nano": "yolov8n-pose.pt", "v8-small": "yolov8s-pose.pt",
+        "v8-medium": "yolov8m-pose.pt", "v8-large": "yolov8l-pose.pt", "v8-xlarge": "yolov8x-pose.pt",
+        "v26-nano": "yolo26n-pose.pt", "v26-small": "yolo26s-pose.pt",
+        "v26-medium": "yolo26m-pose.pt", "v26-large": "yolo26l-pose.pt", "v26-xlarge": "yolo26x-pose.pt",
+    }
+
     available_models: Dict[str, str] = {
         **YOLO11_MODELS,
         **YOLOV8_MODELS,
         **YOLO26_MODELS,
+        **_ALIASES,
     }
 
     def __init__(self, model: str = "yolo11n", device: Optional[Union[int, str]] = None):
@@ -63,7 +73,7 @@ class YoloPose(BaseYoloModel):
         return self.model.predict(source, conf=conf, **kwargs)
 
     @staticmethod
-    def get_keypoints(results) -> List[Dict[str, np.ndarray]]:
+    def get_keypoints(results) -> List[Dict[str, object]]:
         """Extract keypoints from inference results.
 
         Args:
@@ -72,7 +82,7 @@ class YoloPose(BaseYoloModel):
         Returns:
             List of dicts with keys ``xy`` and ``confidence`` per person.
         """
-        keypoints_list: List[Dict[str, np.ndarray]] = []
+        keypoints_list: List[Dict[str, object]] = []
 
         for result in results:
             if result.keypoints is None:
@@ -137,6 +147,7 @@ class YoloPose(BaseYoloModel):
 
 def main():
     parser = argparse.ArgumentParser(description="YOLO Pose Estimation")
+    parser.add_argument("--version", action="store_true", help="Show version and exit")
     parser.add_argument(
         "--model", type=str, default="yolo11n",
         help="Model to use (default: yolo11n). Available: " + ", ".join(YoloPose.available_models.keys()),
@@ -153,6 +164,11 @@ def main():
     parser.add_argument("--list-models", action="store_true", help="List all available models and exit")
 
     args = parser.parse_args()
+
+    if args.version:
+        from version import __version__
+        print(f"YoloLLM {__version__}")
+        return
 
     if args.list_models:
         print("Available models:")

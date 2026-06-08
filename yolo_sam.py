@@ -119,7 +119,8 @@ Examples:
         """,
     )
 
-    parser.add_argument("-i", "--image", type=str, required=True, help="Path to input image")
+    parser.add_argument("--version", action="store_true", help="Show version and exit")
+    parser.add_argument("-i", "--image", type=str, help="Path to input image")
     parser.add_argument(
         "-m", "--model", type=str, default="sam2.1-base",
         help="Model to use (default: sam2.1-base). Options: " + ", ".join(YoloSAM.available_models.keys()),
@@ -139,6 +140,11 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    if args.version:
+        from version import __version__
+        print(f"YoloLLM {__version__}")
+        return
 
     if args.model not in YoloSAM.available_models:
         print(f"Error: Invalid model '{args.model}'")

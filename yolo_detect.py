@@ -100,7 +100,24 @@ class YoloDetector(BaseYoloModel):
         "v26x-obb": "yolo26x-obb.pt",
     }
 
-    available_models: Dict[str, str] = {
+    # Cross-naming-convention aliases so users can use pose-style keys too
+    _ALIASES: Dict[str, str] = {
+        "yolo11n": "yolo11n.pt", "yolo11s": "yolo11s.pt",
+        "yolo11m": "yolo11m.pt", "yolo11l": "yolo11l.pt", "yolo11x": "yolo11x.pt",
+        "yolov8n": "yolov8n.pt", "yolov8s": "yolov8s.pt",
+        "yolov8m": "yolov8m.pt", "yolov8l": "yolov8l.pt", "yolov8x": "yolov8x.pt",
+        "yolov10n": "yolov10n.pt", "yolov10s": "yolov10s.pt",
+        "yolov10m": "yolov10m.pt", "yolov10b": "yolov10b.pt",
+        "yolov10l": "yolov10l.pt", "yolov10x": "yolov10x.pt",
+        "yolov9t": "yolov9t.pt", "yolov9s": "yolov9s.pt",
+        "yolov9m": "yolov9m.pt", "yolov9c": "yolov9c.pt", "yolov9e": "yolov9e.pt",
+        "yolo12n": "yolo12n.pt", "yolo12s": "yolo12s.pt",
+        "yolo12m": "yolo12m.pt", "yolo12l": "yolo12l.pt", "yolo12x": "yolo12x.pt",
+        "yolo26n": "yolo26n.pt", "yolo26s": "yolo26s.pt",
+        "yolo26m": "yolo26m.pt", "yolo26l": "yolo26l.pt", "yolo26x": "yolo26x.pt",
+    }
+
+    available_models: dict[str, str] = {
         **YOLOV10_MODELS,
         **YOLOV9_MODELS,
         **YOLOV8_MODELS,
@@ -111,6 +128,7 @@ class YoloDetector(BaseYoloModel):
         **YOLO12_MODELS,
         **YOLO26_MODELS,
         **YOLO26_OBB_MODELS,
+        **_ALIASES,
     }
 
     FORMAT_TABLE = "table"
@@ -386,12 +404,18 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
-    parser.add_argument("-i", "--input", required=True, help="Path to image or video file, or URL")
+    parser.add_argument("--version", action="store_true", help="Show version and exit")
+    parser.add_argument("-i", "--input", help="Path to image or video file, or URL")
     parser.add_argument(
         "-m", "--model", default=None,
         help="Model name (e.g., v12-nano, v11-large). If not provided, will prompt for selection.",
     )
     args = parser.parse_args()
+
+    if args.version:
+        from version import __version__
+        print(f"YoloLLM {__version__}")
+        raise SystemExit(0)
 
     detector = YoloDetector(model_name=args.model)
     detector.detect(args.input)

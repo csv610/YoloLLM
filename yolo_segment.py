@@ -48,11 +48,21 @@ class YoloSegmentation(BaseYoloModel):
         "ve26-xlarge": "yoloe26x-seg.pt",
     }
 
+    _ALIASES: Dict[str, str] = {
+        "yolo11n": "yolo11n-seg.pt", "yolo11s": "yolo11s-seg.pt",
+        "yolo11m": "yolo11m-seg.pt", "yolo11l": "yolo11l-seg.pt", "yolo11x": "yolo11x-seg.pt",
+        "yolov8n": "yolov8n-seg.pt", "yolov8s": "yolov8s-seg.pt",
+        "yolov8m": "yolov8m-seg.pt", "yolov8l": "yolov8l-seg.pt", "yolov8x": "yolov8x-seg.pt",
+        "yolo26n": "yolo26n-seg.pt", "yolo26s": "yolo26s-seg.pt",
+        "yolo26m": "yolo26m-seg.pt", "yolo26l": "yolo26l-seg.pt", "yolo26x": "yolo26x-seg.pt",
+    }
+
     available_models: Dict[str, str] = {
         **YOLOV8_MODELS,
         **YOLOV11_MODELS,
         **YOLOV26_MODELS,
         **YOLOE26_MODELS,
+        **_ALIASES,
     }
 
     def __init__(self, model_name: Optional[str] = None):
@@ -111,6 +121,7 @@ class YoloSegmentation(BaseYoloModel):
 
 def main():
     parser = argparse.ArgumentParser(description="YOLO Segmentation (v8, v11, v26, YOLOE-26)")
+    parser.add_argument("--version", action="store_true", help="Show version and exit")
     parser.add_argument(
         "-m", "--model",
         choices=list(YoloSegmentation.available_models.keys()),
@@ -141,6 +152,11 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.version:
+        from version import __version__
+        print(f"YoloLLM {__version__}")
+        return
 
     segmentation = YoloSegmentation(args.model)
     results = segmentation.segment(args.image)

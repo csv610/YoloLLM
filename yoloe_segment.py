@@ -51,7 +51,7 @@ class YoloESegment(BaseYoloModel):
             self.classes: List[str] = classes if classes else ["person", "bus"]
             self.model.set_classes(self.classes, self.model.get_text_pe(self.classes))
         else:
-            self.classes = None
+            self.classes = None  # type: ignore[assignment]
 
         self.image: Optional[np.ndarray] = None
         self.results = None
@@ -119,7 +119,8 @@ Examples:
   python yoloe_segment.py image.jpg -m yoloev8s -p dog cat bird -o output.jpg
         """,
     )
-    parser.add_argument("image", type=str, help="Path to input image")
+    parser.add_argument("--version", action="store_true", help="Show version and exit")
+    parser.add_argument("image", type=str, nargs="?", help="Path to input image")
     parser.add_argument(
         "-m", "--model", type=str, default="yoloe11l",
         choices=list(YoloESegment.available_models.keys()),
@@ -133,6 +134,11 @@ Examples:
     parser.add_argument("--show", action="store_true", help="Display the result")
 
     args = parser.parse_args()
+
+    if args.version:
+        from version import __version__
+        print(f"YoloLLM {__version__}")
+        return
 
     if args.model not in YoloESegment.available_models:
         print(f"Error: Invalid model '{args.model}'")

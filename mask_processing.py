@@ -1,4 +1,3 @@
-import colorsys
 import logging
 from pathlib import Path
 from typing import List
@@ -7,6 +6,20 @@ import numpy as np
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+# Tab10-like perceptually distinct colors (R, G, B)
+_DISTINCT_COLORS: list[tuple[int, int, int]] = [
+    (31, 119, 180),   # blue
+    (255, 127, 14),   # orange
+    (44, 160, 44),    # green
+    (214, 39, 40),    # red
+    (148, 103, 189),  # purple
+    (140, 86, 75),    # brown
+    (227, 119, 194),  # pink
+    (127, 127, 127),  # gray
+    (188, 189, 34),   # olive
+    (23, 190, 207),   # cyan
+]
 
 
 class Segment:
@@ -71,11 +84,8 @@ def overlay_masks(
 
     unique_labels = list({seg.label for seg in segments})
     label_colors: dict[str, tuple[int, int, int]] = {}
-    n_labels = len(unique_labels)
     for i, label in enumerate(unique_labels):
-        hue = i / n_labels if n_labels > 1 else 0.0
-        rgb = colorsys.hsv_to_rgb(hue, 0.7, 1.0)
-        label_colors[label] = tuple(int(c * 255) for c in rgb)
+        label_colors[label] = _DISTINCT_COLORS[i % len(_DISTINCT_COLORS)]
 
     for segment in segments:
         mask = segment.mask
