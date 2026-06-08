@@ -1,15 +1,19 @@
-from ultralytics import YOLO
-from typing import Union, List, Optional
-import numpy as np
 import argparse
-import os
+import logging
+from typing import Dict, List, Optional, Union
+
+import numpy as np
+from ultralytics import YOLO
+
+from base import BaseYoloModel
+
+logger = logging.getLogger(__name__)
 
 
-class YoloPose:
-    """YOLO Pose estimation wrapper for easy model loading and inference."""
+class YoloPose(BaseYoloModel):
+    model_class = YOLO
 
-    # YOLO11 Pose Models
-    YOLO11_MODELS = {
+    YOLO11_MODELS: Dict[str, str] = {
         "yolo11n": "yolo11n-pose.pt",
         "yolo11s": "yolo11s-pose.pt",
         "yolo11m": "yolo11m-pose.pt",
@@ -17,8 +21,7 @@ class YoloPose:
         "yolo11x": "yolo11x-pose.pt",
     }
 
-    # YOLOv8 Pose Models
-    YOLOV8_MODELS = {
+    YOLOV8_MODELS: Dict[str, str] = {
         "yolov8n": "yolov8n-pose.pt",
         "yolov8s": "yolov8s-pose.pt",
         "yolov8m": "yolov8m-pose.pt",
@@ -27,8 +30,7 @@ class YoloPose:
         "yolov8x-p6": "yolov8x-pose-p6.pt",
     }
 
-    # YOLO26 Pose Models
-    YOLO26_MODELS = {
+    YOLO26_MODELS: Dict[str, str] = {
         "yolo26n": "yolo26n-pose.pt",
         "yolo26s": "yolo26s-pose.pt",
         "yolo26m": "yolo26m-pose.pt",
@@ -36,104 +38,97 @@ class YoloPose:
         "yolo26x": "yolo26x-pose.pt",
     }
 
-    # Combined all available models
-    ALL_MODELS = {**YOLO11_MODELS, **YOLOV8_MODELS, **YOLO26_MODELS}
+    available_models: Dict[str, str] = {
+        **YOLO11_MODELS,
+        **YOLOV8_MODELS,
+        **YOLO26_MODELS,
+    }
 
     def __init__(self, model: str = "yolo11n", device: Optional[Union[int, str]] = None):
-        """
-        Initialize YoloPose with a specified model.
-
-        Args:
-            model: Model name (e.g., 'yolo11n', 'yolov8m'). Defaults to 'yolo11n'.
-            device: Device to run inference on (e.g., 0 for GPU, 'cpu'). Defaults to auto-detection.
-        """
-        self.model_name = model
-        self.model_path = self._get_model_path(model)
-        self.model = YOLO(self.model_path)
-
+        super().__init__(model, default_model="yolo11n")
         if device is not None:
             self.model.to(device)
 
-    def _get_model_path(self, model: str) -> str:
-        """Get the model file path from model name."""
-        if model in self.ALL_MODELS:
-            return os.path.join("models", self.ALL_MODELS[model])
-        else:
-            # Assume it's a direct path or model identifier
-            return model
-
     def predict(self, source: Union[str, np.ndarray], conf: float = 0.5, **kwargs):
-        """
-        Run pose estimation on an image.
+        """Run pose estimation on an image.
 
         Args:
             source: Image path, URL, or numpy array.
-            conf: Confidence threshold for detections.
-            **kwargs: Additional arguments to pass to YOLO.predict().
+            conf: Confidence threshold.
+            **kwargs: Additional arguments passed to ``YOLO.predict()``.
 
         Returns:
-            Results object with pose keypoints.
+            YOLO inference results.
         """
         return self.model.predict(source, conf=conf, **kwargs)
 
-    def get_keypoints(self, results) -> List[dict]:
-        """
-        Extract keypoints from results.
+    @staticmethod
+    def get_keypoints(results) -> List[Dict[str, np.ndarray]]:
+        """Extract keypoints from inference results.
 
         Args:
-            results: Results from predict() method.
+            results: Output of :meth:`predict`.
 
         Returns:
-            List of dictionaries with keypoint data for each detected person.
+            List of dicts with keys ``xy`` and ``confidence`` per person.
         """
-        keypoints_list = []
+        keypoints_list: List[Dict[str, np.ndarray]] = []
 
         for result in results:
             if result.keypoints is None:
                 continue
 
-            xy = result.keypoints.xy.cpu().numpy() if hasattr(result.keypoints.xy, 'cpu') else result.keypoints.xy
-            conf = result.keypoints.conf.cpu().numpy() if hasattr(result.keypoints.conf, 'cpu') else result.keypoints.conf
+            xy = result.keypoints.xy
+            conf = result.keypoints.conf
+
+            if hasattr(xy, "cpu"):
+                xy = xy.cpu().numpy()
+            if conf is not None and hasattr(conf, "cpu"):
+                conf = conf.cpu().numpy()
 
             for person_idx in range(len(xy)):
-                keypoints_dict = {
-                    "xy": xy[person_idx],  # (num_keypoints, 2)
-                    "confidence": conf[person_idx] if conf is not None else None,  # (num_keypoints,)
-                }
-                keypoints_list.append(keypoints_dict)
+                keypoints_list.append({
+                    "xy": xy[person_idx],
+                    "confidence": conf[person_idx] if conf is not None else None,
+                })
 
         return keypoints_list
 
-    def get_all_data(self, results) -> List[dict]:
-        """
-        Extract all detection data including bounding boxes and keypoints.
+    @staticmethod
+    def get_all_data(results) -> List[Dict]:
+        """Extract bounding boxes, confidence, and keypoints from results.
 
         Args:
-            results: Results from predict() method.
+            results: Output of :meth:`predict`.
 
         Returns:
-            List of dictionaries with detection and keypoint data.
+            List of detection dicts, each optionally containing ``keypoints``.
         """
-        detections = []
+        detections: List[Dict] = []
 
         for result in results:
             if result.boxes is None:
                 continue
+
             for idx in range(len(result.boxes)):
-                detection = {
-                    "bbox": result.boxes.xyxy[idx].cpu().numpy() if hasattr(result.boxes.xyxy[idx], 'cpu') else result.boxes.xyxy[idx],
-                    "confidence": result.boxes.conf[idx].item() if hasattr(result.boxes.conf[idx], 'item') else float(result.boxes.conf[idx]),
+                detection: Dict = {
+                    "bbox": result.boxes.xyxy[idx].cpu().numpy()
+                    if hasattr(result.boxes.xyxy[idx], "cpu")
+                    else result.boxes.xyxy[idx],
+                    "confidence": result.boxes.conf[idx].item()
+                    if hasattr(result.boxes.conf[idx], "item")
+                    else float(result.boxes.conf[idx]),
                     "class_id": int(result.boxes.cls[idx]),
                 }
 
-                # Add keypoints if available
                 if result.keypoints is not None and idx < len(result.keypoints.xy):
-                    xy = result.keypoints.xy[idx].cpu().numpy() if hasattr(result.keypoints.xy[idx], 'cpu') else result.keypoints.xy[idx]
-                    conf = result.keypoints.conf[idx].cpu().numpy() if hasattr(result.keypoints.conf[idx], 'cpu') else result.keypoints.conf[idx]
-                    detection["keypoints"] = {
-                        "xy": xy,
-                        "confidence": conf,
-                    }
+                    xy = result.keypoints.xy[idx]
+                    conf = result.keypoints.conf[idx]
+                    if hasattr(xy, "cpu"):
+                        xy = xy.cpu().numpy()
+                    if conf is not None and hasattr(conf, "cpu"):
+                        conf = conf.cpu().numpy()
+                    detection["keypoints"] = {"xy": xy, "confidence": conf}
 
                 detections.append(detection)
 
@@ -141,65 +136,34 @@ class YoloPose:
 
 
 def main():
-    """Main entry point with command-line argument parsing."""
-    parser = argparse.ArgumentParser(
-        description="YOLO Pose Estimation - Detect human poses in images"
-    )
-
+    parser = argparse.ArgumentParser(description="YOLO Pose Estimation")
     parser.add_argument(
-        "--model",
-        type=str,
-        default="yolo11n",
-        help="Model to use for pose estimation. Available models: " +
-             ", ".join(YoloPose.ALL_MODELS.keys()) +
-             " (default: yolo11n)"
+        "--model", type=str, default="yolo11n",
+        help="Model to use (default: yolo11n). Available: " + ", ".join(YoloPose.available_models.keys()),
     )
-
     parser.add_argument(
-        "--source",
-        type=str,
-        default="https://ultralytics.com/images/bus.jpg",
-        help="Image source (path, URL, or directory). (default: bus.jpg from ultralytics)"
+        "--source", type=str, default="https://ultralytics.com/images/bus.jpg",
+        help="Image source (path or URL, default: bus.jpg from ultralytics)",
     )
-
+    parser.add_argument("--conf", type=float, default=0.5, help="Confidence threshold (default: 0.5)")
     parser.add_argument(
-        "--conf",
-        type=float,
-        default=0.5,
-        help="Confidence threshold for detections (0.0-1.0). (default: 0.5)"
+        "--show-all", action="store_true",
+        help="Show all detection data (bboxes + keypoints) instead of just keypoints",
     )
-
-    parser.add_argument(
-        "--show-all",
-        action="store_true",
-        help="Show all detection data (bboxes + keypoints) instead of just keypoints"
-    )
-
-    parser.add_argument(
-        "--list-models",
-        action="store_true",
-        help="List all available models and exit"
-    )
+    parser.add_argument("--list-models", action="store_true", help="List all available models and exit")
 
     args = parser.parse_args()
 
-    # List available models if requested
     if args.list_models:
-        print("Available YOLO11 Models:")
-        for model_name in YoloPose.YOLO11_MODELS.keys():
-            print(f"  - {model_name}")
-        print("\nAvailable YOLOv8 Models:")
-        for model_name in YoloPose.YOLOV8_MODELS.keys():
-            print(f"  - {model_name}")
-        print("\nAvailable YOLO26 Models:")
-        for model_name in YoloPose.YOLO26_MODELS.keys():
-            print(f"  - {model_name}")
+        print("Available models:")
+        for name in YoloPose.available_models:
+            print(f"  - {name}")
         return
 
-    print(f"Loading model: {args.model}")
+    logger.info("Loading model: %s", args.model)
     pose_estimator = YoloPose(model=args.model)
 
-    print(f"Running inference on: {args.source}")
+    logger.info("Running inference on: %s", args.source)
     results = pose_estimator.predict(args.source, conf=args.conf)
 
     if args.show_all:
@@ -220,4 +184,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
+

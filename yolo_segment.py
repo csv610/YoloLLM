@@ -1,126 +1,104 @@
 import argparse
-import os
-import shutil
+import logging
 from pathlib import Path
+from typing import Dict, List, Optional
+
 from ultralytics import YOLO
-from mask_processing import save_masks, overlay_masks, Segment
 
-# YOLOv8 segmentation models
-YOLOV8_MODELS = {
-    "v8-nano": "yolov8n-seg.pt",
-    "v8-small": "yolov8s-seg.pt",
-    "v8-medium": "yolov8m-seg.pt",
-    "v8-large": "yolov8l-seg.pt",
-    "v8-xlarge": "yolov8x-seg.pt",
-}
+from base import BaseYoloModel
+from config import SEG_RESULTS_DIR
+from exceptions import ModelNotFoundError
+from mask_processing import Segment, overlay_masks, save_masks
 
-# YOLOv11 segmentation models
-YOLOV11_MODELS = {
-    "v11-nano": "yolo11n-seg.pt",
-    "v11-small": "yolo11s-seg.pt",
-    "v11-medium": "yolo11m-seg.pt",
-    "v11-large": "yolo11l-seg.pt",
-    "v11-xlarge": "yolo11x-seg.pt",
-}
-
-# YOLOv26 segmentation models
-YOLOV26_MODELS = {
-    "v26-nano": "yolo26n-seg.pt",
-    "v26-small": "yolo26s-seg.pt",
-    "v26-medium": "yolo26m-seg.pt",
-    "v26-large": "yolo26l-seg.pt",
-    "v26-xlarge": "yolo26x-seg.pt",
-}
-
-# YOLOE-26 segmentation models
-YOLOE26_MODELS = {
-    "ve26-nano": "yoloe26n-seg.pt",
-    "ve26-small": "yoloe26s-seg.pt",
-    "ve26-medium": "yoloe26m-seg.pt",
-    "ve26-large": "yoloe26l-seg.pt",
-    "ve26-xlarge": "yoloe26x-seg.pt",
-}
-
-# Combined models
-MODELS = {**YOLOV8_MODELS, **YOLOV11_MODELS, **YOLOV26_MODELS, **YOLOE26_MODELS}
+logger = logging.getLogger(__name__)
 
 
-class YoloSegmentation:
-    """YOLO Segmentation class for running image segmentation."""
+class YoloSegmentation(BaseYoloModel):
+    model_class = YOLO
 
-    def __init__(self, model_name="v11-nano"):
-        """
-        Initialize the YoloSegmentation model.
+    YOLOV8_MODELS: Dict[str, str] = {
+        "v8-nano": "yolov8n-seg.pt",
+        "v8-small": "yolov8s-seg.pt",
+        "v8-medium": "yolov8m-seg.pt",
+        "v8-large": "yolov8l-seg.pt",
+        "v8-xlarge": "yolov8x-seg.pt",
+    }
 
-        Args:
-            model_name: Key from MODELS dictionary (default: v11-nano)
+    YOLOV11_MODELS: Dict[str, str] = {
+        "v11-nano": "yolo11n-seg.pt",
+        "v11-small": "yolo11s-seg.pt",
+        "v11-medium": "yolo11m-seg.pt",
+        "v11-large": "yolo11l-seg.pt",
+        "v11-xlarge": "yolo11x-seg.pt",
+    }
 
-        Raises:
-            ValueError: If model_name is not in MODELS
-        """
-        if model_name not in MODELS:
-            raise ValueError(
-                f"Model '{model_name}' not found. Available models: {list(MODELS.keys())}"
+    YOLOV26_MODELS: Dict[str, str] = {
+        "v26-nano": "yolo26n-seg.pt",
+        "v26-small": "yolo26s-seg.pt",
+        "v26-medium": "yolo26m-seg.pt",
+        "v26-large": "yolo26l-seg.pt",
+        "v26-xlarge": "yolo26x-seg.pt",
+    }
+
+    YOLOE26_MODELS: Dict[str, str] = {
+        "ve26-nano": "yoloe26n-seg.pt",
+        "ve26-small": "yoloe26s-seg.pt",
+        "ve26-medium": "yoloe26m-seg.pt",
+        "ve26-large": "yoloe26l-seg.pt",
+        "ve26-xlarge": "yoloe26x-seg.pt",
+    }
+
+    available_models: Dict[str, str] = {
+        **YOLOV8_MODELS,
+        **YOLOV11_MODELS,
+        **YOLOV26_MODELS,
+        **YOLOE26_MODELS,
+    }
+
+    def __init__(self, model_name: Optional[str] = None):
+        if model_name is not None and model_name not in self.available_models:
+            raise ModelNotFoundError(
+                f"Model '{model_name}' not found. Available models: {list(self.available_models.keys())}"
             )
+        super().__init__(model_name, default_model="v11-nano")
 
-        self.model_name = model_name
-        model_filename = MODELS[model_name]
-        self.models_dir = Path(__file__).parent / "models"
-        self.models_dir.mkdir(exist_ok=True)
-        self.model_file = str(self.models_dir / model_filename)
-
-        print(f"Loading {model_name} model ({self.model_file})...")
-        self.model = YOLO(self.model_file)
-
-    def segment(self, image_path):
-        """
-        Run segmentation on an image.
+    def segment(self, image_path: str) -> List[Segment]:
+        """Run segmentation on an image.
 
         Args:
-            image_path: Path or URL to the image
+            image_path: Path or URL to the image.
 
         Returns:
-            List of Segment objects, each containing a label and binary mask image
+            List of Segment objects containing binary mask images.
         """
-        print(f"Running segmentation on: {image_path}")
+        logger.info("Running segmentation on: %s", image_path)
         results = self.model(image_path)
         return self._extract_segments(results)
 
-    def _extract_segments(self, results):
-        """
-        Extract Segment objects from YOLO results.
-
-        Args:
-            results: Results from YOLO inference
-
-        Returns:
-            List of Segment objects with binary mask images
-        """
-        segments = []
+    @staticmethod
+    def _extract_segments(results) -> List[Segment]:
+        """Extract Segment objects from YOLO inference results."""
+        segments: List[Segment] = []
 
         for result in results:
-            if result.masks is not None:
-                masks = result.masks.data  # (num_objects, H, W)
-                class_indices = result.boxes.cls.int().tolist()
+            if result.masks is None:
+                continue
 
-                # Convert to numpy if needed
-                if hasattr(masks, 'cpu'):
-                    masks = masks.cpu().numpy()
+            masks = result.masks.data
+            class_indices = result.boxes.cls.int().tolist()
 
-                # Create Segment object for each detected object
-                for mask, cls_idx in zip(masks, class_indices):
-                    label = result.names[int(cls_idx)]
-                    segments.append(Segment(mask=mask, label=label))
+            if hasattr(masks, "cpu"):
+                masks = masks.cpu().numpy()
+
+            for mask, cls_idx in zip(masks, class_indices):
+                label = result.names[int(cls_idx)]
+                segments.append(Segment(mask=mask, label=label))
 
         return segments
 
-    def print_results(self, segments):
-        """
-        Print segmentation results to console.
-
-        Args:
-            segments: List of Segment objects from segment() method
-        """
+    @staticmethod
+    def print_results(segments: List[Segment]) -> None:
+        """Print segmentation results to the console."""
         print("\nSegmentation Results:")
         if not segments:
             print("  No objects detected")
@@ -131,66 +109,52 @@ class YoloSegmentation:
             print(f"  Object {i}: {segment.label} (mask shape: {segment.mask.shape})")
 
 
-    @staticmethod
-    def get_available_models():
-        """
-        Get list of available models.
-
-        Returns:
-            Dictionary of available models
-        """
-        return MODELS
-
-
 def main():
-    parser = argparse.ArgumentParser(description="YOLO Segmentation (v8 and v11)")
+    parser = argparse.ArgumentParser(description="YOLO Segmentation (v8, v11, v26, YOLOE-26)")
     parser.add_argument(
         "-m", "--model",
-        choices=MODELS.keys(),
+        choices=list(YoloSegmentation.available_models.keys()),
         default="v11-nano",
-        help="Model version and size (default: v11-nano)"
+        help="Model version and size (default: v11-nano)",
     )
     parser.add_argument(
         "-i", "--image",
         default="https://ultralytics.com/images/bus.jpg",
-        help="Image path or URL (default: bus.jpg from ultralytics)"
+        help="Image path or URL (default: bus.jpg from ultralytics)",
     )
     parser.add_argument(
         "-o", "--output-dir",
         metavar="OUTPUT_DIR",
-        default="results/seg",
-        help="Output directory for masks and overlay images (default: results/seg)"
+        default=str(SEG_RESULTS_DIR),
+        help=f"Output directory (default: {SEG_RESULTS_DIR})",
     )
     parser.add_argument(
         "-a", "--alpha",
         type=float,
         default=0.6,
-        help="Transparency of masks in overlay (0-1, default: 0.6)"
+        help="Transparency of masks in overlay (0-1, default: 0.6)",
     )
     parser.add_argument(
         "--overlay-filename",
         default="overlay.png",
-        help="Filename for overlay image (default: overlay.png)"
+        help="Filename for overlay image (default: overlay.png)",
     )
 
     args = parser.parse_args()
 
-    # Create segmentation instance and run
     segmentation = YoloSegmentation(args.model)
     results = segmentation.segment(args.image)
     segmentation.print_results(results)
 
-    # Save masks and overlay if output directory is provided
-    if args.output_dir:
-        # Clear output directory if it exists
-        if os.path.exists(args.output_dir):
-            shutil.rmtree(args.output_dir)
-        os.makedirs(args.output_dir, exist_ok=True)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-        save_masks(results, output_dir=args.output_dir)
-        overlay_path = os.path.join(args.output_dir, args.overlay_filename)
-        overlay_masks(results, args.image, output_path=overlay_path, alpha=args.alpha)
+    save_masks(results, output_dir=str(output_dir))
+    overlay_path = output_dir / args.overlay_filename
+    overlay_masks(results, args.image, output_path=str(overlay_path), alpha=args.alpha)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
+

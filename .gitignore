@@ -36,7 +36,6 @@ yoloenv/
 *.swp
 *.swo
 *~
-.DS_Store
 .project
 .pydevproject
 .settings/
@@ -59,11 +58,9 @@ htmlcov/
 
 # System files
 Thumbs.db
-.DS_Store
 *.log
 
 # IDE specific
-.vscode
 .idea
 *.iml
 
